@@ -23,6 +23,7 @@ async function run() {
   try {
     const homesCollection = client.db('homeScapeDB').collection('homes');
     const usersCollection = client.db('homeScapeDB').collection('users');
+    const bookingsCollection = client.db('homeScapeDB').collection('bookings');
 
 
     //JWT & users api
@@ -35,11 +36,41 @@ async function run() {
         $set: user
       }
       const result = await usersCollection.updateOne(filter, updateDoc, options);
-      console.log(result);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '5h' })
-      console.log(result, token);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '5h' });
       res.send({ result, token })
     })
+
+    //booking api
+
+    //get user bookings 
+    app.get('/bookings', async (req, res) => {
+      let query = {};
+      const email = req.query.email;
+      if (email) {
+        query = {
+          guestEmail: email
+        }
+      }
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result)
+
+    })
+
+    //save bookings
+    app.post('/bookings', async (req, res) => {
+      const booking = req.body;
+      const result = await bookingsCollection.insertOne(booking);
+      res.send(result)
+    })
+
+
+
+
+
+
+
+
+
 
     console.log('Database Connected...')
   } finally {
